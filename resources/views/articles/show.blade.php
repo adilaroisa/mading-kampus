@@ -46,9 +46,10 @@
                 {{ $article->title }}
             </h1>
 
+            {{-- FIX: Hapus max-h-96 agar gambar tidak ter-crop. Container kini menyesuaikan tinggi gambar secara alami. --}}
             @if($article->image)
-                <div class="mb-8 rounded-2xl overflow-hidden shadow-md max-h-96 w-full bg-gray-50 flex justify-center">
-                    <img src="{{ asset('storage/' . $article->image) }}" alt="Poster Pengumuman" class="object-contain w-full h-full">
+                <div class="mb-8 rounded-2xl overflow-hidden shadow-md w-full bg-gray-50 flex justify-center">
+                    <img src="{{ asset('storage/' . $article->image) }}" alt="Poster Pengumuman" class="object-contain w-full h-auto">
                 </div>
             @endif
 
@@ -90,7 +91,7 @@
 
             <div class="space-y-4">
                 @forelse($article->comments as $comment)
-                    <div x-data="{ editing: false }" class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div x-data="{ editing: false, replying: false }" class="bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <div class="flex justify-between items-start mb-2">
                             <div>
                                 <span class="font-bold text-gray-900 text-sm">{{ $comment->user->name }}</span>
@@ -104,7 +105,7 @@
                                 @if(auth()->check() && (auth()->id() === $comment->user_id || auth()->user()->role === 'admin'))
                                     <div class="flex gap-2">
                                         @if(auth()->id() === $comment->user_id)
-                                            <button @click="editing = !editing" class="text-gray-400 hover:text-indigo-600 transition" title="Edit Komentar">
+                                            <button @click="editing = !editing; replying = false" class="text-gray-400 hover:text-indigo-600 transition" title="Edit Komentar">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                             </button>
                                         @endif
@@ -137,6 +138,91 @@
                                 </button>
                             </div>
                         </form>
+
+                        {{-- TOMBOL REPLY --}}
+                        @auth
+                            <div x-show="!editing" class="mt-2">
+                                <button @click="replying = !replying; editing = false" class="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-semibold transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                    Balas
+                                </button>
+                            </div>
+
+                            {{-- FORM REPLY --}}
+                            <form x-show="replying" method="POST" action="{{ route('comments.store', $article->id) }}" class="mt-3" style="display: none;">
+                                @csrf
+                                <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                                <textarea name="body" rows="2" required
+                                    class="w-full bg-white border border-indigo-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                                    placeholder="Balas komentar {{ $comment->user->name }}..."></textarea>
+                                <div class="flex justify-end gap-2 mt-2">
+                                    <button type="button" @click="replying = false" class="text-sm px-3 py-1 text-gray-500 hover:bg-gray-100 rounded flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        Batal
+                                    </button>
+                                    <button type="submit" class="text-sm px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-1 font-semibold">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                        Kirim Balasan
+                                    </button>
+                                </div>
+                            </form>
+                        @endauth
+
+                        {{-- NESTED REPLIES --}}
+                        @if($comment->replies && $comment->replies->count() > 0)
+                            <div class="mt-4 space-y-3 pl-4 border-l-2 border-indigo-100">
+                                @foreach($comment->replies as $reply)
+                                    <div x-data="{ editingReply: false }" class="bg-white p-3 rounded-xl border border-gray-100">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <div>
+                                                <span class="font-bold text-gray-900 text-xs">{{ $reply->user->name }}</span>
+                                                @if($reply->is_edited)
+                                                    <span class="text-xs text-gray-400 italic ml-2">(diedit)</span>
+                                                @endif
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-xs text-gray-400">{{ $reply->created_at->diffForHumans() }}</span>
+
+                                                @if(auth()->check() && (auth()->id() === $reply->user_id || auth()->user()->role === 'admin'))
+                                                    <div class="flex gap-2">
+                                                        @if(auth()->id() === $reply->user_id)
+                                                            <button @click="editingReply = !editingReply" class="text-gray-400 hover:text-indigo-600 transition" title="Edit Balasan">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                            </button>
+                                                        @endif
+                                                        <form method="POST" action="{{ route('comments.destroy', $reply->id) }}" onsubmit="return confirm('Hapus balasan ini?');">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="text-gray-400 hover:text-red-600 transition" title="Hapus Balasan">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div x-show="!editingReply">
+                                            <p class="text-gray-700 text-xs leading-relaxed">{{ $reply->body }}</p>
+                                        </div>
+
+                                        <form x-show="editingReply" method="POST" action="{{ route('comments.update', $reply->id) }}" class="mt-2" style="display: none;">
+                                            @csrf @method('PUT')
+                                            <textarea name="body" required class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-xs focus:ring-indigo-400">{{ $reply->body }}</textarea>
+                                            <div class="flex justify-end gap-2 mt-2">
+                                                <button type="button" @click="editingReply = false" class="text-xs px-3 py-1 text-gray-500 hover:bg-gray-100 rounded flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    Batal
+                                                </button>
+                                                <button type="submit" class="text-xs px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                    Simpan
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 @empty
                     <div class="text-center text-gray-400 py-6 text-sm flex flex-col items-center">
