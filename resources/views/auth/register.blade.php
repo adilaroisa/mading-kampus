@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border-t-8 border-teal-400">
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border-t-8 border-teal-400 mx-6">
         <div class="text-center mb-8 flex flex-col items-center">
             <x-application-logo class="mb-4" />
             <h2 class="text-3xl font-extrabold text-indigo-900 mt-2">Buat Akun Baru</h2>

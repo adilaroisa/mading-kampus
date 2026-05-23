@@ -9,13 +9,13 @@
     <style> body { font-family: 'Nunito', sans-serif; background-color: #f8fafc; } </style>
 </head>
 <body class="antialiased text-gray-800">
-    <nav class="bg-gradient-to-r from-indigo-500 to-teal-400 p-4 shadow-lg rounded-b-3xl mb-8">
+    <nav class="bg-gradient-to-r from-indigo-500 to-purple-500 p-4 shadow-lg rounded-b-2xl mb-8">
         <div class="max-w-4xl mx-auto flex justify-between items-center px-4">
             <a href="{{ route('home') }}" class="flex items-center gap-2 text-2xl font-extrabold text-white tracking-wider">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
                 CampusHub
             </a>
-            <a href="{{ route('home') }}" class="flex items-center gap-2 text-white bg-white/20 hover:bg-white/30 font-semibold px-4 py-2 rounded-full text-sm transition">
+            <a href="{{ route('home') }}" class="flex items-center gap-2 text-white bg-white/20 hover:bg-white/30 font-bold px-4 py-2 rounded-full text-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Kembali ke Beranda
             </a>
@@ -25,11 +25,11 @@
     <div class="max-w-4xl mx-auto px-4 mb-16">
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-6 md:p-8">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <span class="flex items-center gap-1 bg-teal-100 text-teal-800 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wide">
+                <span class="flex items-center gap-1 bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                     {{ $article->category->name ?? 'Umum' }}
                 </span>
-                <div class="flex items-center gap-3 text-sm text-gray-400 font-medium">
+                <div class="flex items-center gap-3 text-sm text-gray-500 font-medium">
                     <span class="flex items-center gap-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         {{ $article->views_count }} Views
@@ -49,7 +49,7 @@
                         <form action="{{ route('articles.bookmark', $article->id) }}" method="POST">
                             @csrf
                             <button type="submit" 
-                                    class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-full transition border {{ auth()->user()->bookmarks->contains($article->id) ? 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 shadow-sm' }}">
+                                    class="flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-full transition border-2 {{ auth()->user()->bookmarks->contains($article->id) ? 'bg-indigo-100 text-indigo-700 border-indigo-300 hover:bg-indigo-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 shadow-sm' }}">
                                 
                                 <svg class="w-4 h-4" 
                                      fill="{{ auth()->user()->bookmarks->contains($article->id) ? 'currentColor' : 'none' }}" 
@@ -59,7 +59,7 @@
                                 </svg>
                                 
                                 <span>
-                                    {{ auth()->user()->bookmarks->contains($article->id) ? 'Tersimpan di Bookmark' : 'Simpan ke Bookmark' }}
+                                    {{ auth()->user()->bookmarks->contains($article->id) ? 'Tersimpan' : 'Simpan' }}
                                 </span>
                             </button>
                         </form>
@@ -67,7 +67,7 @@
                 @endif
             @endauth
 
-            <h1 class="text-3xl md:text-4xl font-black text-indigo-950 mb-6 leading-tight">
+            <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-6 leading-tight">
                 {{ $article->title }}
             </h1>
 
@@ -88,9 +88,9 @@
         </div>
 
         <div class="mt-8 bg-white rounded-3xl shadow-lg p-6 md:p-8 border border-gray-100">
-            <h3 class="text-xl font-bold text-indigo-950 mb-6 flex items-center gap-2">
-                <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                Ruang Diskusi Kampus ({{ $article->comments->count() }})
+            <h3 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                Ruang Diskusi ({{ $article->comments->count() }})
             </h3>
 
             @auth
@@ -100,16 +100,16 @@
                         <textarea name="body" rows="3" required class="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-sm" placeholder="Tulis tanggapan atau pertanyaanmu di sini..."></textarea>
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-full text-sm shadow transition">
+                        <button type="submit" class="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-200 text-white font-bold px-6 py-2.5 rounded-full text-sm shadow transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                             Kirim Komentar
                         </button>
                     </div>
                 </form>
             @else
-                <div class="flex items-center justify-center gap-2 bg-yellow-50 text-yellow-800 p-4 rounded-2xl border border-yellow-200 text-sm mb-8 font-medium">
+                <div class="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-800 p-4 rounded-2xl border border-indigo-200 text-sm mb-8 font-medium">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    <span>Kamu harus <a href="{{ route('login') }}" class="underline font-bold text-indigo-600">Masuk / Login</a> terlebih dahulu untuk ikut berdiskusi.</span>
+                    <span>Kamu harus <a href="{{ route('login') }}" class="underline font-bold text-indigo-600 hover:text-indigo-700">Masuk / Login</a> terlebih dahulu untuk ikut berdiskusi.</span>
                 </div>
             @endauth
 
@@ -156,7 +156,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     Batal
                                 </button>
-                                <button type="submit" class="text-sm px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center gap-1">
+                                <button type="submit" class="text-sm px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition flex items-center gap-1 font-semibold">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                     Simpan Perubahan
                                 </button>
@@ -182,7 +182,7 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         Batal
                                     </button>
-                                    <button type="submit" class="text-sm px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-1 font-semibold">
+                                    <button type="submit" class="text-sm px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition flex items-center gap-1 font-semibold">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                                         Kirim Balasan
                                     </button>
