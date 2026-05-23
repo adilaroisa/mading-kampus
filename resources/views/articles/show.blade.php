@@ -42,11 +42,35 @@
                 </div>
             </div>
 
+            {{-- Fitur Bookmark Ditambahkan Di Sini --}}
+            @auth
+                @if(auth()->user()->role !== 'admin')
+                    <div class="mb-4 flex justify-end">
+                        <form action="{{ route('articles.bookmark', $article->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" 
+                                    class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-full transition border {{ auth()->user()->bookmarks->contains($article->id) ? 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 shadow-sm' }}">
+                                
+                                <svg class="w-4 h-4" 
+                                     fill="{{ auth()->user()->bookmarks->contains($article->id) ? 'currentColor' : 'none' }}" 
+                                     stroke="currentColor" 
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                </svg>
+                                
+                                <span>
+                                    {{ auth()->user()->bookmarks->contains($article->id) ? 'Tersimpan di Bookmark' : 'Simpan ke Bookmark' }}
+                                </span>
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            @endauth
+
             <h1 class="text-3xl md:text-4xl font-black text-indigo-950 mb-6 leading-tight">
                 {{ $article->title }}
             </h1>
 
-            {{-- FIX: Hapus max-h-96 agar gambar tidak ter-crop. Container kini menyesuaikan tinggi gambar secara alami. --}}
             @if($article->image)
                 <div class="mb-8 rounded-2xl overflow-hidden shadow-md w-full bg-gray-50 flex justify-center">
                     <img src="{{ asset('storage/' . $article->image) }}" alt="Poster Pengumuman" class="object-contain w-full h-auto">
@@ -139,7 +163,6 @@
                             </div>
                         </form>
 
-                        {{-- TOMBOL REPLY --}}
                         @auth
                             <div x-show="!editing" class="mt-2">
                                 <button @click="replying = !replying; editing = false" class="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-semibold transition">
@@ -148,7 +171,6 @@
                                 </button>
                             </div>
 
-                            {{-- FORM REPLY --}}
                             <form x-show="replying" method="POST" action="{{ route('comments.store', $article->id) }}" class="mt-3" style="display: none;">
                                 @csrf
                                 <input type="hidden" name="parent_id" value="{{ $comment->id }}">
@@ -168,7 +190,6 @@
                             </form>
                         @endauth
 
-                        {{-- NESTED REPLIES --}}
                         @if($comment->replies && $comment->replies->count() > 0)
                             <div class="mt-4 space-y-3 pl-4 border-l-2 border-indigo-100">
                                 @foreach($comment->replies as $reply)

@@ -8,9 +8,22 @@ use Illuminate\Http\Request;
 
 class ArticleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $articles = Article::with('category', 'author')->orderByDesc('is_pinned')->latest()->paginate(9);
+        $query = Article::with('category', 'author');
+
+        // Tambahkan kondisi jika ada parameter kategori di URL
+        if ($request->has('category')) {
+            $query->whereHas('category', function($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        $articles = $query->orderByDesc('is_pinned')->latest()->paginate(9);
+        
+        // Mempertahankan parameter query saat pindah halaman paginasi
+        $articles->appends($request->all());
+
         return view('welcome', compact('articles'));
     }
 
