@@ -30,12 +30,12 @@
             <div class="mt-6">
                 <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
 
-                <x-text-input
+                <x-password-input
                     id="password"
                     name="password"
-                    type="password"
-                    class="mt-1 block w-3/4"
+                    autocomplete="current-password"
                     placeholder="{{ __('Password') }}"
+                    class="mt-1 block w-3/4"
                 />
 
                 <x-input-error :messages="$errors->userDeletion->get('password')" class="mt-2" />
