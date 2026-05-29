@@ -26,7 +26,7 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request)
     {
         $user = $request->user();
         $user->fill(Arr::except($request->validated(), ['avatar']));
@@ -54,7 +54,55 @@ class ProfileController extends Controller
 
         $user->save();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Profil berhasil diperbarui'
+            ]);
+        }
+
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Update or delete the user's avatar via AJAX.
+     */
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'remove_avatar' => ['nullable', 'boolean'],
+        ]);
+
+        $user = $request->user();
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+            $user->save();
+
+            return response()->json([
+                'status' => 'success',
+                'avatar_url' => asset('storage/' . $path),
+            ]);
+        } elseif ($request->boolean('remove_avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = null;
+            $user->save();
+
+            return response()->json([
+                'status' => 'success',
+                'avatar_url' => null,
+            ]);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'No action taken'], 400);
     }
 
     /**

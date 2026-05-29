@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
@@ -108,27 +108,35 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($bookmarks as $article)
-                <div class="float-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden border border-gray-100">
-                    <div class="flex justify-between items-start p-4 bg-gradient-to-r from-indigo-50 to-purple-50">
-                        <span class="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide">
-                            {{ $article->category->name ?? 'Umum' }}
-                        </span>
-                        <form method="POST" action="{{ route('articles.bookmark', $article->id) }}" onsubmit="return confirm('Hapus dari bookmark?')">
-                            @csrf
-                            <button type="submit" class="text-indigo-600 hover:text-red-600 transition" title="Hapus dari Bookmark">
-                                <svg class="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="p-5 flex flex-col h-full">
-                        <h3 class="text-lg font-extrabold text-gray-900 mb-3 leading-tight line-clamp-2 hover:text-indigo-600 transition">
-                            <a href="{{ route('articles.show', $article->slug) }}">{{ $article->title }}</a>
-                        </h3>
-                        <p class="text-gray-600 mb-4 font-medium text-sm flex-grow line-clamp-2">{{ Str::limit($article->content, 80) }}</p>
-                        <a href="{{ route('articles.show', $article->slug) }}" class="block w-full py-3 text-center rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-indigo-200 transition text-sm">
-                            Baca Selengkapnya
-                        </a>
-                    </div>
+                <div class="relative group">
+                    <a href="{{ route('articles.show', $article->slug) }}" class="flex flex-col h-full float-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden border border-gray-100">
+                        <div class="relative overflow-hidden bg-gray-100">
+                            @if($article->image)
+                                <img src="{{ asset('storage/' . $article->image) }}" class="mading-img w-full group-hover:scale-105 transition-transform duration-500">
+                            @else
+                                <div class="mading-img w-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-gray-400 font-bold group-hover:scale-105 transition-transform duration-500">No Image</div>
+                            @endif
+                            <span class="absolute top-4 left-4 px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs uppercase rounded-full shadow-md z-10">
+                                {{ $article->category->name ?? 'Umum' }}
+                            </span>
+                        </div>
+
+                        <div class="p-5 flex flex-col flex-1">
+                            <h2 class="text-lg font-extrabold text-gray-900 mb-3 leading-tight line-clamp-2 group-hover:text-indigo-600 transition">{{ $article->title }}</h2>
+                            <p class="text-gray-600 mb-4 font-medium text-sm flex-grow line-clamp-2">{{ Str::limit($article->content, 80) }}</p>
+                            
+                            <div class="mt-4 block w-full py-3 text-center rounded-xl bg-indigo-50 text-indigo-700 font-bold group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 text-sm">
+                                Baca Selengkapnya
+                            </div>
+                        </div>
+                    </a>
+
+                    <form method="POST" action="{{ route('articles.bookmark', $article->id) }}" onsubmit="return confirm('Hapus dari bookmark?')" class="absolute top-4 right-4 z-20">
+                        @csrf
+                        <button type="submit" class="p-2 bg-white rounded-full text-indigo-600 hover:text-red-600 hover:bg-red-50 shadow-md transition-colors" title="Hapus dari Bookmark">
+                            <svg class="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                        </button>
+                    </form>
                 </div>
             @empty
                 <div class="col-span-full py-20 text-center bg-white rounded-3xl shadow-lg border border-gray-100">

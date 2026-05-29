@@ -20,6 +20,9 @@
             isCropping: false,
             selectedFileName: '',
             cropper: null,
+            isUploading: false,
+            showToast: false,
+            toastMessage: '',
             hasExistingAvatar: {{ $user->avatar ? 'true' : 'false' }},
             handleFileChange() {
                 const file = this.$refs.avatar.files[0];
@@ -115,12 +118,13 @@
                     dragMode: 'move',
                     autoCropArea: 1,
                     restore: false,
-                    guides: true,
-                    center: true,
+                    guides: false,
+                    center: false,
                     highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
+                    cropBoxMovable: false,
+                    cropBoxResizable: false,
                     toggleDragModeOnDblclick: false,
+                    background: false,
                 });
             },
             resetFileInput() {
@@ -152,22 +156,43 @@
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
                 if (!blob) return;
                 
-                const newFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
-                const dt = new DataTransfer();
-                dt.items.add(newFile);
-                this.$refs.avatar.files = dt.files;
+                this.isUploading = true;
+                const formData = new FormData();
+                formData.append('avatar', blob, 'avatar.jpg');
+                formData.append('_token', '{{ csrf_token() }}');
                 
-                if (this.photoPreview) URL.revokeObjectURL(this.photoPreview);
-                this.photoPreview = URL.createObjectURL(blob);
-                this.hasExistingAvatar = true;
-                
-                this.$dispatch('avatar-preview-updated', this.photoPreview);
-                this.$dispatch('avatar-changed');
-                
-                this.showPreviewModal = false;
-                if (this.cropper) {
-                    this.cropper.destroy();
-                    this.cropper = null;
+                try {
+                    const response = await fetch('{{ route('profile.avatar.update') }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        if (this.photoPreview) URL.revokeObjectURL(this.photoPreview);
+                        this.photoPreview = data.avatar_url;
+                        this.hasExistingAvatar = true;
+                        
+                        this.$dispatch('avatar-updated', data.avatar_url);
+                        
+                        this.showPreviewModal = false;
+                        if (this.cropper) {
+                            this.cropper.destroy();
+                            this.cropper = null;
+                        }
+                        
+                        this.toastMessage = 'Foto profil berhasil diperbarui';
+                        this.showToast = true;
+                        setTimeout(() => this.showToast = false, 3000);
+                    } else {
+                        alert('Gagal mengunggah foto.');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Terjadi kesalahan saat mengunggah foto.');
+                } finally {
+                    this.isUploading = false;
                 }
             },
             cancelPreview() {
@@ -180,17 +205,83 @@
                 }
                 this.showPreviewModal = false;
             },
-            deleteAvatar() {
-                this.removeAvatar = true;
-                this.hasExistingAvatar = false;
-                this.photoPreview = null;
-                this.resetFileInput();
-                this.showPreviewModal = false;
-                this.$dispatch('avatar-removed');
+            async deleteAvatar() {
+                if (!confirm('Apakah Anda yakin ingin menghapus foto profil?')) return;
+                
+                this.isUploading = true;
+                const formData = new FormData();
+                formData.append('remove_avatar', '1');
+                formData.append('_token', '{{ csrf_token() }}');
+                
+                try {
+                    const response = await fetch('{{ route('profile.avatar.update') }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        this.removeAvatar = false;
+                        this.hasExistingAvatar = false;
+                        this.photoPreview = null;
+                        this.imageUrl = null;
+                        this.resetFileInput();
+                        this.showPreviewModal = false;
+                        
+                        this.$dispatch('avatar-updated', null);
+                        
+                        this.toastMessage = 'Foto profil berhasil dihapus';
+                        this.showToast = true;
+                        setTimeout(() => this.showToast = false, 3000);
+                    } else {
+                        alert('Gagal menghapus foto.');
+                    }
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    alert('Terjadi kesalahan saat menghapus foto.');
+                } finally {
+                    this.isUploading = false;
+                }
             },
             async submitForm(event) {
                 event.preventDefault();
-                this.$el.submit();
+                
+                this.isUploading = true;
+                const formData = new FormData(this.$refs.profileForm);
+                
+                try {
+                    const response = await fetch(this.$refs.profileForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        this.toastMessage = data.message || 'Profil berhasil diperbarui';
+                        this.showToast = true;
+                        setTimeout(() => this.showToast = false, 3000);
+                        
+                        // Optional: you could dispatch an event here to update navbar name, etc.
+                    } else {
+                        if (data.errors) {
+                            let msgs = [];
+                            for(let k in data.errors) msgs.push(data.errors[k][0]);
+                            alert('Gagal menyimpan:\n' + msgs.join('\n'));
+                        } else {
+                            alert(data.message || 'Terjadi kesalahan.');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Save error:', error);
+                    alert('Terjadi kesalahan koneksi.');
+                } finally {
+                    this.isUploading = false;
+                }
             }
         }" x-ref="profileForm" @submit.prevent="submitForm">
         @csrf
@@ -293,8 +384,16 @@
                     </div>
 
                     <div class="p-4 flex flex-col items-center justify-center gap-4 bg-gray-50/50">
-                        <div class="w-full h-72 md:h-96 bg-black/5 rounded-2xl flex items-center justify-center overflow-hidden border border-gray-200 shadow-inner">
-                            <img :src="imageUrl" x-show="imageUrl" x-ref="previewImage" class="block max-w-full max-h-full object-contain">
+                        <div class="w-full flex items-center justify-center">
+                            <!-- Preview Mode (clean image) -->
+                            <div x-show="!isCropping" class="flex items-center justify-center">
+                                <img :src="imageUrl" class="block max-w-full max-h-[60vh] rounded-2xl shadow-sm">
+                            </div>
+
+                            <!-- Crop Mode -->
+                            <div x-show="isCropping" class="w-full h-[60vh] rounded-2xl flex items-center justify-center overflow-hidden">
+                                <img :src="imageUrl" x-ref="previewImage" class="block max-w-full max-h-[60vh]">
+                            </div>
                         </div>
 
                         <div class="w-full flex flex-col sm:flex-row justify-end gap-3" x-show="isCropping">
@@ -304,8 +403,9 @@
                             </button>
                             <button type="button"
                                     @click.prevent="savePreview()"
-                                    class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-sm font-bold text-white shadow-md hover:from-blue-700 hover:to-purple-700 transition">
-                                Simpan Foto
+                                    :disabled="isUploading"
+                                    class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-sm font-bold text-white shadow-md hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50">
+                                <span x-text="isUploading ? 'Menyimpan...' : 'Simpan Foto'"></span>
                             </button>
                         </div>
                     </div>
@@ -340,6 +440,16 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Toast Notification -->
+            <div x-show="showToast" x-cloak x-transition.opacity.duration.300ms
+                 class="fixed bottom-4 right-4 z-50 flex items-center gap-3 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl">
+                <div class="bg-green-500 rounded-full p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <span class="text-sm font-medium" x-text="toastMessage"></span>
             </div>
             <x-input-error class="mt-2" :messages="$errors->get('avatar')" />
         </div>
@@ -375,8 +485,8 @@
         </div>
 
         <div class="flex items-center gap-4 pt-6 mt-4 border-t border-gray-100">
-            <x-primary-button class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-none px-8 py-2.5 rounded-2xl shadow-sm tracking-wide">
-                {{ __('Simpan') }}
+            <x-primary-button x-bind:disabled="isUploading" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-none px-8 py-2.5 rounded-2xl shadow-sm tracking-wide disabled:opacity-50 transition">
+                <span x-text="isUploading ? 'Menyimpan...' : 'Simpan'"></span>
             </x-primary-button>
 
             @if (session('status') === 'profile-updated')

@@ -12,15 +12,32 @@ class AdminArticleController extends Controller
 {
     public function index()
     {
-        $articles = Article::with('category')->latest()->paginate(10);
+        $articles = Article::with('category')
+            ->where(function($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->latest()
+            ->paginate(10);
         return view('admin.articles.index', compact('articles'));
+    }
+
+    public function archive()
+    {
+        $articles = Article::with('category')
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now())
+            ->latest()
+            ->paginate(10);
+        return view('admin.articles.archive', compact('articles'));
     }
 
     public function create()
     {
         // Mengambil semua kategori untuk dipilih di form
         $categories = Category::all();
-        return view('admin.articles.create', compact('categories'));
+        $eventCategoryId = Category::where('name', 'Event')->value('id');
+        return view('admin.articles.create', compact('categories', 'eventCategoryId'));
     }
 
     public function store(Request $request)
@@ -30,6 +47,9 @@ class AdminArticleController extends Controller
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_date' => 'nullable|date',
+            'event_location' => 'nullable|string|max:255',
+            'expires_at' => 'nullable|date',
         ]);
 
         $imagePath = null;
@@ -45,6 +65,9 @@ class AdminArticleController extends Controller
             'category_id' => $request->category_id,
             'image' => $imagePath,
             'is_pinned' => $request->has('is_pinned'),
+            'event_date' => $request->event_date,
+            'event_location' => $request->event_location,
+            'expires_at' => $request->expires_at,
             'author_id' => auth()->id(),
         ]);
 
@@ -54,7 +77,8 @@ class AdminArticleController extends Controller
     public function edit(Article $article)
     {
         $categories = Category::all();
-        return view('admin.articles.edit', compact('article', 'categories'));
+        $eventCategoryId = Category::where('name', 'Event')->value('id');
+        return view('admin.articles.edit', compact('article', 'categories', 'eventCategoryId'));
     }
 
     public function update(Request $request, Article $article)
@@ -64,6 +88,9 @@ class AdminArticleController extends Controller
             'content' => 'required',
             'category_id' => 'required|exists:categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'event_date' => 'nullable|date',
+            'event_location' => 'nullable|string|max:255',
+            'expires_at' => 'nullable|date',
         ]);
 
         if ($request->hasFile('image')) {
@@ -80,6 +107,9 @@ class AdminArticleController extends Controller
             'content' => $request->content,
             'category_id' => $request->category_id,
             'is_pinned' => $request->has('is_pinned'),
+            'event_date' => $request->event_date,
+            'event_location' => $request->event_location,
+            'expires_at' => $request->expires_at,
         ]);
 
         return redirect()->route('admin.articles.index')->with('success', 'Mading berhasil diperbarui!');

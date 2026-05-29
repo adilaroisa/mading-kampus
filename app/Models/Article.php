@@ -8,6 +8,12 @@ class Article extends Model
 {
     protected $guarded = ['id']; // Membuka izin mass-assignment untuk semua kolom kecuali ID
 
+    protected $casts = [
+        'expires_at' => 'datetime',
+        'event_date' => 'datetime',
+        'is_pinned' => 'boolean',
+    ];
+
     public function category() { return $this->belongsTo(Category::class); }
     public function author() { return $this->belongsTo(User::class, 'author_id'); }
     public function comments() { return $this->hasMany(Comment::class); }

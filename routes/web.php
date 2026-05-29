@@ -23,15 +23,22 @@ Route::middleware(['auth'])->group(function () {
     // Profil (Bawaan Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // Akses Khusus Admin (Dilindungi Middleware Auth & Admin)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
-        return view('admin.dashboard');
+        $totalArticles = \App\Models\Article::count();
+        $totalViews = \App\Models\Article::sum('views_count');
+        $totalComments = \App\Models\Comment::count();
+        $recentComments = \App\Models\Comment::with(['user', 'article'])->latest()->take(5)->get();
+        
+        return view('admin.dashboard', compact('totalArticles', 'totalViews', 'totalComments', 'recentComments'));
     })->name('dashboard');
     
+    Route::get('articles/archive', [AdminArticleController::class, 'archive'])->name('articles.archive');
     Route::resource('articles', AdminArticleController::class);
 });
 

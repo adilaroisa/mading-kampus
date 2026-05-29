@@ -19,6 +19,12 @@ class ArticleController extends Controller
             });
         }
 
+        // Jangan tampilkan artikel yang sudah kedaluwarsa
+        $query->where(function($q) {
+            $q->whereNull('expires_at')
+              ->orWhere('expires_at', '>', now());
+        });
+
         $articles = $query->orderByDesc('is_pinned')->latest()->paginate(9);
         
         // Mempertahankan parameter query saat pindah halaman paginasi
@@ -27,9 +33,20 @@ class ArticleController extends Controller
         return view('welcome', compact('articles'));
     }
 
+
     public function show($slug)
     {
-        $article = Article::where('slug', $slug)->with(['comments.user', 'category', 'author'])->firstOrFail();
+        $article = Article::where('slug', $slug)
+            ->with([
+                'comments' => function($q) {
+                    $q->whereNull('parent_id')->oldest();
+                },
+                'comments.user',
+                'comments.replies.user',
+                'category', 
+                'author'
+            ])
+            ->firstOrFail();
         
         $sessionKey = 'viewed_article_' . $article->id;
         if (!session()->has($sessionKey)) {
@@ -54,13 +71,24 @@ class ArticleController extends Controller
 
     public function storeComment(Request $request, Article $article)
     {
-        $request->validate(['body' => 'required|min:3']);
+        $request->validate(['body' => 'required|min:1']);
 
-        Comment::create([
+        $comment = Comment::create([
             'article_id' => $article->id,
             'user_id' => auth()->id(),
+            'parent_id' => $request->parent_id,
             'body' => $request->body
         ]);
+
+        $comment->load('user');
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'comment' => $comment,
+                'message' => 'Komentar berhasil ditambahkan!'
+            ]);
+        }
 
         return back()->with('success', 'Komentar berhasil ditambahkan!');
     }
@@ -69,21 +97,35 @@ class ArticleController extends Controller
     {
         if ($comment->user_id !== auth()->id()) abort(403);
 
-        $request->validate(['body' => 'required|min:3']);
+        $request->validate(['body' => 'required|min:1']);
 
         $comment->update([
             'body' => $request->body,
             'is_edited' => true
         ]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Komentar berhasil diperbarui.'
+            ]);
+        }
+
         return back()->with('success', 'Komentar berhasil diperbarui.');
     }
 
-    public function destroyComment(Comment $comment)
+    public function destroyComment(Request $request, Comment $comment)
     {
         if ($comment->user_id !== auth()->id() && auth()->user()->role !== 'admin') abort(403);
 
         $comment->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Komentar dihapus.'
+            ]);
+        }
 
         return back()->with('success', 'Komentar berhasil dihapus.');
     }

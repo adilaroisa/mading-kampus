@@ -13,9 +13,7 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" 
                  x-data="{ tab: '{{ request()->query('tab') === 'password' ? 'password' : ($errors->updatePassword->isNotEmpty() ? 'password' : ($errors->userDeletion->isNotEmpty() ? 'danger' : 'profile')) }}', removeAvatar: false, hasAvatar: {{ Auth::user()->avatar ? 'true' : 'false' }}, previewUrl: null }"
-                 @avatar-removed.window="removeAvatar = true; hasAvatar = false; previewUrl = null"
-                 @avatar-changed.window="removeAvatar = false"
-                 @avatar-preview-updated.window="previewUrl = $event.detail">
+                 @avatar-updated.window="if($event.detail) { previewUrl = $event.detail; removeAvatar = false; hasAvatar = true; } else { previewUrl = null; removeAvatar = true; hasAvatar = false; }">
                 
                 <div class="lg:col-span-1">
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-purple-100/60 sticky top-6">

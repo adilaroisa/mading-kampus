@@ -6,8 +6,7 @@
             </a>
 
             <div class="hidden sm:flex sm:items-center sm:gap-4">
-                @if(auth()->check())
-                    @if(auth()->user()->role === 'admin')
+                @if(auth()->check() && auth()->user()->role === 'admin')
                         <a href="{{ route('home') }}"
                            class="inline-flex items-center px-3 py-2 text-sm font-medium border-b-2 {{ request()->routeIs('home') ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-300' }} rounded-md transition">
                             Beranda
@@ -20,7 +19,10 @@
                            class="inline-flex items-center px-3 py-2 text-sm font-medium border-b-2 {{ request()->routeIs('admin.articles.index') ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-300' }} rounded-md transition">
                             Kelola Artikel
                         </a>
-                    @endif
+                        <a href="{{ route('admin.articles.archive') }}"
+                           class="inline-flex items-center px-3 py-2 text-sm font-medium border-b-2 {{ request()->routeIs('admin.articles.archive') ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-300' }} rounded-md transition">
+                            Arsip Mading
+                        </a>
                 @endif
             </div>
         </div>
@@ -39,10 +41,17 @@
 
                 <x-dropdown align="right" width="64" contentClasses="bg-white">
                     <x-slot name="trigger">
-                        <button class="flex items-center gap-2.5 bg-indigo-600 text-white pl-2 pr-4 py-2 rounded-full font-bold hover:bg-indigo-700 transition focus:outline-none focus:ring-4 focus:ring-indigo-300">
-                            <span class="w-8 h-8 rounded-full bg-purple-400 text-white flex items-center justify-center text-sm font-bold uppercase">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                            </span>
+                        <button class="flex items-center gap-2.5 bg-indigo-600 text-white pl-2 pr-4 py-2 rounded-full font-bold hover:bg-indigo-700 transition focus:outline-none focus:ring-4 focus:ring-indigo-300"
+                                x-data="{ avatarUrl: '{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : '' }}' }"
+                                @avatar-updated.window="avatarUrl = $event.detail">
+                            <template x-if="avatarUrl">
+                                <img :src="avatarUrl" class="w-8 h-8 rounded-full object-cover border border-white/20 shadow-sm">
+                            </template>
+                            <template x-if="!avatarUrl">
+                                <span class="w-8 h-8 rounded-full bg-purple-400 text-white flex items-center justify-center text-sm font-bold uppercase">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </span>
+                            </template>
                             <span class="max-w-[120px] truncate text-sm">{{ Auth::user()->name }}</span>
                             <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -95,17 +104,19 @@
 
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
-                Beranda
-            </x-responsive-nav-link>
-            
             @auth
                 @if(auth()->user()->role === 'admin')
+                    <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                        Beranda
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                         Dashboard Admin
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.articles.index')" :active="request()->routeIs('admin.articles.index')">
                         Kelola Artikel
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.articles.archive')" :active="request()->routeIs('admin.articles.archive')">
+                        Arsip Mading
                     </x-responsive-nav-link>
                 @else
                     @unless(request()->routeIs('bookmarks.index'))
