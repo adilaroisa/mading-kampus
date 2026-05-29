@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Storage; // <-- Ini baris yang ditambahkan
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -28,22 +29,27 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $user->fill($request->validated());
+        $user->fill(Arr::except($request->validated(), ['avatar']));
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
 
-        // Logika unggah berkas gambar
+        // Logika unggah berkas gambar atau penghapusan avatar
         if ($request->hasFile('avatar')) {
-            // Hapus foto profil lama jika ada di storage
+            // Jika ada file baru, hapus foto lama lalu simpan yang baru
             if ($user->avatar) {
                 Storage::disk('public')->delete($user->avatar);
             }
 
-            // Simpan foto profil baru ke folder 'avatars' di disk public
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $path;
+        } elseif ($request->boolean('remove_avatar')) {
+            // Jika user menandai penghapusan avatar, hapus dari storage dan set null
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = null;
         }
 
         $user->save();
