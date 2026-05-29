@@ -4,7 +4,7 @@
             {{ __('Informasi Profil') }}
         </h2>
         <p class="mt-1 text-sm text-gray-600">
-            {{ __("Perbarui informasi akun dan foto profil Anda.") }}
+            {{ __('Perbarui informasi akun dan foto profil Anda.') }}
         </p>
     </header>
 
@@ -16,21 +16,23 @@
         @csrf
         @method('patch')
 
-        <div x-data="{ photoName: null, photoPreview: null }" class="col-span-6 sm:col-span-4">
+        <div x-data="{ photoPreview: null }" class="col-span-6 sm:col-span-4">
             <x-input-label for="avatar" :value="__('Foto Profil')" />
             
             <input type="file" id="avatar" name="avatar" class="hidden"
+                   accept="image/png, image/jpeg, image/gif"
                    x-ref="avatar"
                    @change="
-                        photoName = $refs.avatar.files[0].name;
+                        const file = $refs.avatar.files[0];
+                        if (!file) return;
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             photoPreview = e.target.result;
                         };
-                        reader.readAsDataURL($refs.avatar.files[0]);
+                        reader.readAsDataURL(file);
                    " />
 
-            <div class="mt-2 flex items-center gap-5">
+            <div class="mt-2 flex flex-col sm:flex-row sm:items-center sm:gap-5 gap-4">
                 <div x-show="!photoPreview" class="w-20 h-20 rounded-full overflow-hidden border-2 border-purple-100 shadow-sm bg-gray-100 flex items-center justify-center">
                     @if($user->avatar)
                         <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
@@ -43,11 +45,14 @@
                     <img :src="photoPreview" class="w-full h-full object-cover">
                 </div>
 
-                <button type="button" 
-                        class="px-4 py-2 border border-purple-200 rounded-2xl text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition duration-200"
-                        @click.prevent="$refs.avatar.click()">
-                    Pilih Foto Baru
-                </button>
+                <div class="space-y-2">
+                    <button type="button" 
+                            class="px-4 py-2 border border-purple-200 rounded-2xl text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition duration-200"
+                            @click.prevent="$refs.avatar.click()">
+                        Pilih Foto Baru
+                    </button>
+                    <p class="text-xs text-gray-500">Hanya PNG, JPG, GIF. Maks. 2MB.</p>
+                </div>
             </div>
             <x-input-error class="mt-2" :messages="$errors->get('avatar')" />
         </div>
