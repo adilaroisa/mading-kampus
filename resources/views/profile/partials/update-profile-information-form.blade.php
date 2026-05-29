@@ -12,7 +12,90 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6" x-data="{ photoPreview: null, removeAvatar: false, showPreviewModal: false }" x-ref="profileForm">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6" x-data="{
+            photoPreview: null,
+            imageUrl: null,
+            removeAvatar: false,
+            showPreviewModal: false,
+            rotation: 0,
+            selectedFileName: '',
+            hasExistingAvatar: {{ $user->avatar ? 'true' : 'false' }},
+            handleFileChange() {
+                const file = this.$refs.avatar.files[0];
+                if (!file) return;
+                this.selectedFileName = file.name;
+                this.removeAvatar = false;
+                this.rotation = 0;
+                if (this.imageUrl) URL.revokeObjectURL(this.imageUrl);
+                this.imageUrl = URL.createObjectURL(file);
+                this.photoPreview = this.imageUrl;
+                this.showPreviewModal = true;
+                this.$dispatch('avatar-changed');
+            },
+            resetFileInput() {
+                this.$refs.avatar.value = null;
+                if (this.imageUrl) URL.revokeObjectURL(this.imageUrl);
+                this.imageUrl = null;
+                this.photoPreview = null;
+                this.selectedFileName = '';
+                this.rotation = 0;
+            },
+            rotateImage() {
+                this.rotation = (this.rotation + 90) % 360;
+            },
+            async _drawAndPrepareFile() {
+                const file = this.$refs.avatar.files[0];
+                if (!file || !this.imageUrl) return;
+
+                const img = await new Promise((resolve, reject) => {
+                    const image = new Image();
+                    image.onload = () => resolve(image);
+                    image.onerror = reject;
+                    image.src = this.imageUrl;
+                });
+
+                const size = Math.min(img.naturalWidth, img.naturalHeight);
+                const canvas = this.$refs.cropCanvas;
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, size, size);
+                ctx.save();
+                ctx.translate(size / 2, size / 2);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                const sx = (img.naturalWidth - size) / 2;
+                const sy = (img.naturalHeight - size) / 2;
+                ctx.drawImage(img, sx, sy, size, size, -size / 2, -size / 2, size, size);
+                ctx.restore();
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                if (!blob) return;
+                const newFile = new File([blob], this.selectedFileName || 'avatar.jpg', { type: 'image/jpeg' });
+                const dt = new DataTransfer();
+                dt.items.add(newFile);
+                this.$refs.avatar.files = dt.files;
+                this.photoPreview = URL.createObjectURL(blob);
+                this.hasExistingAvatar = true;
+            },
+            async savePreview() {
+                await this._drawAndPrepareFile();
+                this.rotation = 0;
+                this.showPreviewModal = false;
+            },
+            cancelPreview() {
+                if (this.photoPreview) {
+                    this.resetFileInput();
+                }
+                this.showPreviewModal = false;
+            },
+            async submitForm(event) {
+                event.preventDefault();
+                if (this.photoPreview) {
+                    await this._drawAndPrepareFile();
+                }
+                this.$el.submit();
+            }
+        }" x-ref="profileForm" @submit.prevent="submitForm">
         @csrf
         @method('patch')
 
@@ -20,63 +103,36 @@
             <x-input-label for="avatar" :value="__('Foto Profil')" />
             
             <input type="file" id="avatar" name="avatar" class="hidden"
-                   accept="image/png, image/jpeg, image/gif"
+                   accept="image/*"
+                   capture="environment"
                    x-ref="avatar"
-                   @change="
-                        const file = $refs.avatar.files[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            photoPreview = e.target.result;
-                            removeAvatar = false;
-                            showPreviewModal = true;
-                            $dispatch('avatar-changed');
-                        };
-                        reader.readAsDataURL(file);
-                   " />
+                   @change="handleFileChange()" />
 
             <input type="hidden" name="remove_avatar" value="0" x-bind:value="removeAvatar ? 1 : 0">
+            <canvas x-ref="cropCanvas" class="hidden"></canvas>
 
             <div class="mt-2 flex flex-col sm:flex-row sm:items-center sm:gap-5 gap-4">
-                <div x-show="!photoPreview" class="relative w-20 h-20">
+                <div class="relative w-20 h-20">
                     <div class="w-full h-full rounded-full overflow-hidden border-2 border-purple-100 shadow-sm bg-gray-100 flex items-center justify-center">
-                        <button type="button" x-show="{{ $user->avatar ? 'true' : 'false' }}" @click="showPreviewModal = true" class="w-full h-full flex items-center justify-center focus:outline-none">
-                            <template x-if="!removeAvatar && {{ $user->avatar ? 'true' : 'false' }}">
+                        <button type="button" x-show="photoPreview || (!removeAvatar && hasExistingAvatar)" @click="showPreviewModal = true" class="w-full h-full flex items-center justify-center focus:outline-none">
+                            <template x-if="photoPreview">
+                                <img :src="photoPreview" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!photoPreview && !removeAvatar && hasExistingAvatar">
                                 <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
                             </template>
-                            <span class="text-2xl font-bold text-purple-600" x-show="removeAvatar || {{ $user->avatar ? 'false' : 'true' }}">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                         </button>
+                        <template x-if="removeAvatar || (!photoPreview && !hasExistingAvatar)">
+                            <div class="w-full h-full flex items-center justify-center">
+                                <span class="text-2xl font-bold text-purple-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                            </div>
+                        </template>
                     </div>
 
                     <button type="button" aria-label="Edit foto profil" @click.prevent="$refs.avatar.click(); removeAvatar = false"
                             class="absolute -right-1 -bottom-1 bg-white p-1.5 rounded-full ring-2 ring-white shadow text-purple-600 hover:bg-purple-50 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.9 9.9a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.9-9.9a2 2 0 012.828 0zM15.121 4.95l-1.06 1.06L13 4.95l1.06-1.06 1.06 1.06z" />
-                        </svg>
-                    </button>
-
-                    <!-- small delete icon removed; use modal delete instead -->
-                </div>
-
-                <div x-show="photoPreview" style="display: none;" class="relative w-20 h-20">
-                    <button type="button" @click.prevent="showPreviewModal = true" class="absolute inset-0 w-full h-full flex items-center justify-center focus:outline-none">
-                        <div class="w-full h-full rounded-full overflow-hidden border-2 border-purple-400 shadow-md">
-                            <img :src="photoPreview" class="w-full h-full object-cover">
-                        </div>
-                    </button>
-
-                    <button type="button" aria-label="Edit foto profil" @click.prevent="$refs.avatar.click(); removeAvatar = false"
-                            class="absolute -right-1 -bottom-1 bg-white p-1.5 rounded-full ring-2 ring-white shadow text-purple-600 hover:bg-purple-50 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M17.414 2.586a2 2 0 010 2.828l-9.9 9.9a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.9-9.9a2 2 0 012.828 0zM15.121 4.95l-1.06 1.06L13 4.95l1.06-1.06 1.06 1.06z" />
-                        </svg>
-                    </button>
-
-                    <button type="button" x-show="photoPreview"
-                            @click.prevent="photoPreview = null; $refs.avatar.value = null; removeAvatar = false; $dispatch('avatar-changed')"
-                            class="absolute -left-1 -bottom-1 bg-white p-1.5 rounded-full ring-2 ring-white shadow text-gray-600 hover:bg-gray-50 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.536-10.536a.75.75 0 10-1.06-1.06L10 8.94 7.524 6.464a.75.75 0 10-1.06 1.06L8.94 10l-2.476 2.476a.75.75 0 101.06 1.06L10 11.06l2.476 2.476a.75.75 0 101.06-1.06L11.06 10l2.476-2.476z" clip-rule="evenodd" />
                         </svg>
                     </button>
                 </div>
@@ -93,18 +149,20 @@
             
             <!-- Preview Modal -->
             <div x-show="showPreviewModal" x-cloak x-transition class="fixed inset-0 z-50 flex items-center justify-center">
-                <div class="absolute inset-0 bg-black/50" @click="showPreviewModal = false"></div>
+                <div class="absolute inset-0 bg-black/50" @click="cancelPreview()"></div>
 
-                <div class="relative bg-white rounded-lg shadow-lg max-w-lg w-full mx-4">
-                    <div class="p-3 flex justify-end gap-2">
-                        <button type="button" aria-label="Hapus foto" x-show="photoPreview || {{ $user->avatar ? 'true' : 'false' }}" @click.prevent="removeAvatar = true; $refs.avatar.value = null; photoPreview = null; showPreviewModal = false; $dispatch('avatar-removed'); $nextTick(() => $refs.profileForm.submit())"
-                                class="bg-white p-2 rounded-full text-red-500 hover:bg-red-50 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v1H2.5a.5.5 0 000 1H3v9a2 2 0 002 2h8a2 2 0 002-2V6h.5a.5.5 0 000-1H16V4a2 2 0 00-2-2H6zm3 5a.5.5 0 01.5.5v6a.5.5 0 01-1 0v-6A.5.5 0 019 7zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0v-6z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
+                <div class="relative bg-white rounded-3xl shadow-lg max-w-xl w-full mx-4 overflow-hidden">
+                    <div class="p-3 border-b border-gray-200 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <span class="text-base">Foto Profil</span>
+                            <button type="button" aria-label="Rotasi" x-show="photoPreview"
+                                    @click.prevent="rotateImage()"
+                                    class="bg-white px-3 py-2 rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                                Rotasi
+                            </button>
+                        </div>
 
-                        <button type="button" aria-label="Tutup preview" @click.prevent="showPreviewModal = false"
+                        <button type="button" aria-label="Tutup preview" @click.prevent="cancelPreview()"
                                 class="bg-white p-2 rounded-full text-gray-600 hover:bg-gray-50 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -112,19 +170,32 @@
                         </button>
                     </div>
 
-                    <div class="p-4 flex items-center justify-center">
-                        <template x-if="photoPreview">
-                            <img :src="photoPreview" class="w-48 h-48 md:w-80 md:h-80 object-cover">
-                        </template>
+                    <div class="p-4 flex flex-col items-center justify-center gap-4">
+                        <div class="w-64 h-64 md:w-72 md:h-72 rounded-3xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                            <template x-if="photoPreview">
+                                <img :src="photoPreview" :style="`transform: rotate(${rotation}deg);`" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!photoPreview && hasExistingAvatar">
+                                <img src="{{ asset('storage/' . $user->avatar) }}" :style="`transform: rotate(${rotation}deg);`" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!photoPreview && !hasExistingAvatar">
+                                <div class="w-full h-full flex items-center justify-center text-5xl font-bold text-purple-600">
+                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                </div>
+                            </template>
+                        </div>
 
-                        <template x-if="!photoPreview">
-                            <div class="flex items-center justify-center w-full">
-                                <template x-if="!removeAvatar && {{ $user->avatar ? 'true' : 'false' }}">
-                                    <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="w-48 h-48 md:w-80 md:h-80 object-cover">
-                                </template>
-                                <div x-show="removeAvatar || {{ $user->avatar ? 'false' : 'true' }}" class="w-48 h-48 md:w-80 md:h-80 rounded-md bg-gray-100 flex items-center justify-center text-4xl font-bold text-purple-600">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
-                            </div>
-                        </template>
+                        <div class="w-full flex flex-col sm:flex-row justify-end gap-3">
+                            <button type="button" @click.prevent="cancelPreview()"
+                                    class="w-full sm:w-auto px-5 py-2 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                                Batal
+                            </button>
+                            <button type="button" x-show="photoPreview"
+                                    @click.prevent="savePreview()"
+                                    class="w-full sm:w-auto px-5 py-2 rounded-2xl bg-purple-600 text-sm font-semibold text-white hover:bg-purple-700 transition">
+                                Selesai
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
