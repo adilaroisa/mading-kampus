@@ -12,20 +12,21 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" 
-                 x-data="{ tab: '{{ request()->query('tab') === 'password' ? 'password' : ($errors->updatePassword->isNotEmpty() ? 'password' : ($errors->userDeletion->isNotEmpty() ? 'danger' : 'profile')) }}', removeAvatar: false, hasAvatar: {{ Auth::user()->avatar ? 'true' : 'false' }} }"
-                 @avatar-removed.window="removeAvatar = true; hasAvatar = false"
-                 @avatar-changed.window="removeAvatar = false">
+                 x-data="{ tab: '{{ request()->query('tab') === 'password' ? 'password' : ($errors->updatePassword->isNotEmpty() ? 'password' : ($errors->userDeletion->isNotEmpty() ? 'danger' : 'profile')) }}', removeAvatar: false, hasAvatar: {{ Auth::user()->avatar ? 'true' : 'false' }}, previewUrl: null }"
+                 @avatar-removed.window="removeAvatar = true; hasAvatar = false; previewUrl = null"
+                 @avatar-changed.window="removeAvatar = false"
+                 @avatar-preview-updated.window="previewUrl = $event.detail">
                 
                 <div class="lg:col-span-1">
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-purple-100/60 sticky top-6">
                         <div class="flex flex-col items-center text-center pb-6 border-b border-gray-100">
                             <div class="w-20 h-20 rounded-full overflow-hidden shadow-md border-2 border-purple-200 flex items-center justify-center bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-500 text-white text-2xl font-bold">
-                                <template x-if="!removeAvatar && hasAvatar">
+                                <template x-if="!removeAvatar && (hasAvatar || previewUrl)">
                                     <div class="w-full h-full">
-                                        <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                                        <img :src="previewUrl || '{{ asset('storage/' . Auth::user()->avatar) }}'" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
                                     </div>
                                 </template>
-                                <template x-if="removeAvatar || !hasAvatar">
+                                <template x-if="removeAvatar || (!hasAvatar && !previewUrl)">
                                     <div class="w-full h-full flex items-center justify-center">
                                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                     </div>
