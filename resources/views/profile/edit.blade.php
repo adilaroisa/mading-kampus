@@ -12,7 +12,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" 
-                 x-data="{ tab: '{{ $errors->updatePassword->isNotEmpty() ? 'password' : ($errors->userDeletion->isNotEmpty() ? 'danger' : 'profile') }}' }">
+                 x-data="{ tab: '{{ request()->query('tab') === 'password' ? 'password' : ($errors->updatePassword->isNotEmpty() ? 'password' : ($errors->userDeletion->isNotEmpty() ? 'danger' : 'profile')) }}' }">
                 
                 <div class="lg:col-span-1">
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-purple-100/60 sticky top-6">
