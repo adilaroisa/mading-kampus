@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CampusHub - Bookmark</title>
+    <title>DiMadingin - Bookmark</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
@@ -22,7 +22,7 @@
 <body class="antialiased">
     <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-4 shadow-sm">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-3xl font-black text-gray-900 tracking-tighter">Campus<span class="text-indigo-600">Hub</span></h1>
+            <h1 class="text-3xl font-black text-gray-900 tracking-tighter">Di<span class="text-indigo-600">Madingin</span></h1>
 
             <div class="flex items-center gap-4">
                 @auth
