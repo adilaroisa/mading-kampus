@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $article->title }} - DiMadingin</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.bunny.net/css?family=nunito:400,600,700,800&display=swap" rel="stylesheet" />
     <style> 
         body { font-family: 'Nunito', sans-serif; background-color: #f8fafc; } 
@@ -410,7 +411,23 @@
                 },
 
                 async deleteComment(commentId, parentId = null) {
-                    if(!confirm('Hapus komentar ini?')) return;
+                    const result = await Swal.fire({
+                        title: 'Hapus Komentar?',
+                        text: "Komentar ini akan dihapus secara permanen!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#4f46e5',
+                        cancelButtonColor: '#ef4444',
+                        confirmButtonText: 'Ya, hapus!',
+                        cancelButtonText: 'Batal',
+                        customClass: {
+                            popup: 'rounded-3xl',
+                            confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+                            cancelButton: 'rounded-xl px-5 py-2.5 font-bold'
+                        }
+                    });
+                    
+                    if (!result.isConfirmed) return;
                     
                     try {
                         const response = await fetch(`/comments/${commentId}`, {

@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'DiMadingin') }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </head>
     <body class="font-sans antialiased bg-gray-50">
         <div class="min-h-screen">
@@ -23,5 +24,30 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <script>
+            function confirmDelete(event, formElement, title = 'Apakah Anda yakin?', text = 'Data ini akan dihapus secara permanen!') {
+                event.preventDefault();
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-3xl',
+                        confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+                        cancelButton: 'rounded-xl px-5 py-2.5 font-bold'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        formElement.submit();
+                    }
+                });
+            }
+        </script>
     </body>
 </html>
