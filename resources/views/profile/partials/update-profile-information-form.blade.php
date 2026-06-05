@@ -206,7 +206,23 @@
                 this.showPreviewModal = false;
             },
             async deleteAvatar() {
-                if (!confirm('Apakah Anda yakin ingin menghapus foto profil?')) return;
+                const result = await Swal.fire({
+                    title: 'Hapus Foto Profil?',
+                    text: 'Foto profil Anda akan dihapus secara permanen!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-3xl',
+                        confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+                        cancelButton: 'rounded-xl px-5 py-2.5 font-bold'
+                    }
+                });
+                
+                if (!result.isConfirmed) return;
                 
                 this.isUploading = true;
                 const formData = new FormData();

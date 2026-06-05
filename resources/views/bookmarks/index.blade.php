@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DiMadingin - Bookmark</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcfcfc; }
@@ -131,7 +132,7 @@
                         </div>
                     </a>
 
-                    <form method="POST" action="{{ route('articles.bookmark', $article->id) }}" onsubmit="return confirm('Hapus dari bookmark?')" class="absolute top-4 right-4 z-20">
+                    <form method="POST" action="{{ route('articles.bookmark', $article->id) }}" onsubmit="confirmDelete(event, this, 'Hapus Bookmark?', 'Artikel ini akan dihapus dari daftar simpanan Anda.')" class="absolute top-4 right-4 z-20">
                         @csrf
                         <button type="submit" class="p-2 bg-white rounded-full text-indigo-600 hover:text-red-600 hover:bg-red-50 shadow-md transition-colors" title="Hapus dari Bookmark">
                             <svg class="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
@@ -153,5 +154,29 @@
             </div>
         @endif
     </div>
+    <script>
+        function confirmDelete(event, formElement, title = 'Apakah Anda yakin?', text = 'Data ini akan dihapus secara permanen!') {
+            event.preventDefault();
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl',
+                    confirmButton: 'rounded-xl px-5 py-2.5 font-bold',
+                    cancelButton: 'rounded-xl px-5 py-2.5 font-bold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formElement.submit();
+                }
+            });
+        }
+    </script>
 </body>
 </html>

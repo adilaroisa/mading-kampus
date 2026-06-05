@@ -10,24 +10,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat Akun Admin
-        User::create([
-            'name' => 'Admin Mading',
-            'email' => 'admin@umy.ac.id',
-            'password' => Hash::make('password123'),
-            'role' => 'admin',
-        ]);
-
-        // 2. Buat Akun Tim Mahasiswa
-        $team = ['Dian', 'Fina', 'Sari', 'Mariska', 'Lyvia'];
-        
-        foreach ($team as $member) {
-            User::create([
-                'name' => $member,
-                'email' => strtolower($member) . '@student.umy.ac.id',
-                'password' => Hash::make('password123'),
-                'role' => 'user',
-            ]);
-        }
+        // Akun-akun awal sengaja dikosongkan agar Anda bisa Register sendiri dari halaman web.
+        // Jika butuh Admin, Anda bisa ubah 'role' menjadi 'admin' langsung melalui MySQL Workbench.
     }
 }
