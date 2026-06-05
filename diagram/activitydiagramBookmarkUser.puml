@@ -1,0 +1,20 @@
+@startuml
+title Activity Diagram - Bookmark Artikel
+
+|User|
+start
+:Buka halaman detail artikel;
+:Klik tombol bookmark;
+
+|Sistem|
+if (Artikel sudah bookmarked?) then (Ya)
+  :Hapus bookmark di database;
+else (Tidak)
+  :Simpan bookmark di database;
+endif
+
+|User|
+:Perbarui status tombol bookmark;
+stop
+
+@enduml

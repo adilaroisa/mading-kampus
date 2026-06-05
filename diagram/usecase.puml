@@ -1,0 +1,41 @@
+@startuml 
+
+title Use Case Diagram - DiMadingin 
+left to right direction 
+actor "Guest" as Guest 
+actor "User (Mahasiswa)" as User 
+actor "Admin" as Admin
+rectangle "Sistem DiMadingin" { 
+  usecase "Lihat Beranda" as UC_Home 
+  usecase "Lihat Detail Artikel" as UC_Detail 
+  usecase "Filter Kategori" as UC_Filter 
+  usecase "Login / Register" as UC_Auth 
+  usecase "Kelola Profil & Avatar" as UC_Profile 
+  usecase "Kelola Komentar" as UC_Comment 
+  usecase "Kelola Bookmark" as UC_Bookmark 
+  usecase "Kelola Artikel (CRUD)" as UC_Article 
+  usecase "Lihat Dashboard Admin" as UC_Dashboard 
+  usecase "Lihat Arsip Artikel" as UC_Archive 
+} 
+Guest --> UC_Home 
+Guest --> UC_Detail 
+Guest --> UC_Filter 
+Guest --> UC_Auth 
+User --> UC_Home 
+User --> UC_Detail 
+User --> UC_Filter 
+User --> UC_Profile 
+User --> UC_Comment 
+User --> UC_Bookmark 
+Admin --> UC_Home 
+Admin --> UC_Detail 
+Admin --> UC_Filter 
+Admin --> UC_Article 
+Admin --> UC_Dashboard 
+Admin --> UC_Archive 
+UC_Profile ..> UC_Auth : <<include>> 
+UC_Comment ..> UC_Auth : <<include>> 
+UC_Bookmark ..> UC_Auth : <<include>> 
+UC_Article ..> UC_Auth : <<include>> 
+UC_Dashboard ..> UC_Auth : <<include>> 
+@enduml 

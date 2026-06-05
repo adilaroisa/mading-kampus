@@ -1,0 +1,17 @@
+@startuml
+title Activity Diagram - Lihat Konten
+
+|User|
+start
+:Buka halaman beranda;
+:Pilih kategori atau artikel;
+
+|Sistem|
+:Request data konten;
+:Ambil data dari database;
+
+|User|
+:Lihat daftar konten atau detail artikel;
+stop
+
+@enduml

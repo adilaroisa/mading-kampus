@@ -1,0 +1,41 @@
+@startuml 
+
+title Activity Diagram - Tambah Komentar (User) 
+
+|User| 
+
+start 
+
+:Pilih Artikel Spesifik; 
+
+:Input teks komentar; 
+
+:Klik "Kirim Komentar"; 
+
+|Sistem| 
+
+:Validasi input & Auth Middleware; 
+
+if (Data Valid?) then (Ya) 
+
+  |Database| 
+
+  :Simpan Komentar (comments table); 
+
+  |Sistem| 
+
+  :Redirect ke Artikel semula (Success); 
+
+else (Tidak) 
+
+  |Sistem| 
+
+  :Kembalikan pesan error validasi; 
+
+endif 
+
+|User| 
+
+stop 
+
+@enduml 

@@ -1,0 +1,36 @@
+@startuml 
+
+title Flowchart DiMadingin 
+start 
+:Buka Website DiMadingin; 
+:Lihat Beranda; 
+:Pilih Kategori atau Artikel; 
+if (Ingin Interaksi / Kelola?) then (Ya) 
+  if (Sudah Login?) then (Belum) 
+    :Tampilkan halaman Login / Register; 
+  endif 
+  if (Role = Admin?) then (Admin) 
+    :Masuk Dashboard Admin; 
+    fork 
+      :Kelola Artikel (CRUD); 
+    fork again 
+      :Lihat Arsip Artikel; 
+    fork again 
+      :Lihat Statistik Artikel & Komentar; 
+    end fork 
+  else (User) 
+    :Akses sebagai Mahasiswa; 
+    fork 
+      :Tambah/Edit/Hapus Komentar; 
+    fork again 
+      :Tambah/Hapus Bookmark; 
+    fork again 
+      :Edit Profil & Avatar; 
+    end fork 
+  endif 
+else (Tidak) 
+  :Hanya membaca konten; 
+endif
+:Logout; 
+stop 
+@enduml 

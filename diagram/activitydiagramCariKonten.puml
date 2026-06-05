@@ -1,0 +1,16 @@
+@startuml
+title Activity Diagram - Filter Konten Berdasarkan Kategori
+
+|User|
+start
+:Buka halaman utama;
+:Pilih kategori konten;
+
+|Sistem|
+:Mengambil daftar artikel berdasarkan kategori;
+
+|User|
+:Lihat daftar konten terfilter;
+stop
+
+@enduml

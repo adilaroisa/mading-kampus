@@ -1,0 +1,21 @@
+@startuml
+title Activity Diagram - Edit Profil & Avatar
+
+|User|
+start
+:Buka halaman profil;
+:Ubah nama, email, atau unggah avatar;
+
+|Sistem|
+:Validasi data profil;
+if (Data valid?) then (Ya)
+  :Simpan perubahan ke database;
+  :Tampilkan notifikasi sukses;
+else (Tidak)
+  :Kembalikan pesan error;
+endif
+
+|User|
+stop
+
+@enduml

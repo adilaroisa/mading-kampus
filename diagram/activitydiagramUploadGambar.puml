@@ -1,0 +1,24 @@
+@startuml
+title Activity Diagram - Upload Gambar
+
+|Admin|
+start
+:Pilih file gambar;
+
+|Sistem|
+:Validasi file (type, size);
+if (File valid?) then (Ya)
+  :Simpan ke storage;
+  :Generate URL;
+  |Database|
+  :Simpan URL gambar;
+  |Sistem|
+  :Tampilkan preview;
+else (Tidak)
+  :Kirim pesan error;
+endif
+
+|Admin|
+stop
+
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+title Activity Diagram - Register
+
+|Guest|
+start
+:Buka halaman register;
+:Input data pendaftaran;
+
+|System|
+:Validasi data;
+if (Data valid?) then (Ya)
+  :Simpan data user;
+  :Registrasi berhasil;
+else (Tidak)
+  :Kirim pesan error;
+endif
+
+|Guest|
+stop
+
+@enduml

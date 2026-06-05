@@ -1,0 +1,33 @@
+@startuml
+title Activity Diagram - Kelola Konten
+
+|Admin|
+start
+:Login;
+:Pilih menu kelola konten;
+if (Aksi?) then (Tambah)
+  :Input data konten baru;
+  :Pilih gambar;
+  |Sistem|
+  :Validasi data;
+  :Upload gambar;
+  |Database|
+  :Simpan konten;
+elseif (Edit)
+  |Admin|
+  :Pilih konten;
+  :Ubah data;
+  |Database|
+  :Update konten;
+else (Hapus)
+  |Admin|
+  :Pilih konten;
+  |Database|
+  :Hapus konten;
+endif
+
+|Admin|
+:Kembali ke dashboard;
+stop
+
+@enduml
