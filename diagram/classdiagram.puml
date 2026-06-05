@@ -1,0 +1,126 @@
+@startuml
+
+title Class Diagram - DiMadingin (Struktur Tabel Penuh)
+
+class User {
+  +id: bigint
+  +name: string
+  +email: string
+  +email_verified_at: timestamp|null
+  +password: string
+  +role: enum('admin','user')
+  +avatar: string|null
+  +remember_token: string|null
+  +created_at: timestamp
+  +updated_at: timestamp
+}
+
+class Article {
+  +id: bigint
+  +title: string
+  +slug: string
+  +content: text
+  +image: string|null
+  +is_pinned: boolean
+  +views_count: integer
+  +category_id: bigint
+  +author_id: bigint
+  +created_at: timestamp
+  +updated_at: timestamp
+}
+
+class Category {
+  +id: bigint
+  +name: string
+  +slug: string
+  +created_at: timestamp
+  +updated_at: timestamp
+}
+
+class Comment {
+  +id: bigint
+  +article_id: bigint
+  +user_id: bigint
+  +parent_id: bigint|null
+  +body: text
+  +is_edited: boolean
+  +created_at: timestamp
+  +updated_at: timestamp
+}
+
+class Bookmark {
+  +article_id: bigint
+  +user_id: bigint
+}
+
+class PasswordResetToken {
+  +email: string
+  +token: string
+  +created_at: timestamp|null
+}
+
+class Session {
+  +id: string
+  +user_id: bigint|null
+  +ip_address: string|null
+  +user_agent: text|null
+  +payload: longText
+  +last_activity: integer
+}
+
+class Cache {
+  +key: string
+  +value: mediumText
+  +expiration: bigint
+}
+
+class CacheLock {
+  +key: string
+  +owner: string
+  +expiration: bigint
+}
+
+class Job {
+  +id: bigint
+  +queue: string
+  +payload: longText
+  +attempts: unsignedSmallInteger
+  +reserved_at: unsignedInteger|null
+  +available_at: unsignedInteger
+  +created_at: unsignedInteger
+}
+
+class JobBatch {
+  +id: string
+  +name: string
+  +total_jobs: integer
+  +pending_jobs: integer
+  +failed_jobs: integer
+  +failed_job_ids: longText
+  +options: mediumText|null
+  +cancelled_at: integer|null
+  +created_at: integer
+  +finished_at: integer|null
+}
+
+class FailedJob {
+  +id: bigint
+  +uuid: string
+  +connection: string
+  +queue: string
+  +payload: longText
+  +exception: longText
+  +failed_at: timestamp
+}
+
+User "1" -- "*" Article : author
+User "1" -- "*" Comment : comments
+User "*" -- "*" Article : bookmarks
+Article "1" -- "*" Comment : comments
+Article "*" -- "1" Category : category
+Comment "*" -- "1" Comment : parent
+Comment "1" -- "*" Comment : replies
+User "1" -- "*" Session : sessions
+User "1" -- "*" PasswordResetToken : password_reset_tokens
+
+@enduml
