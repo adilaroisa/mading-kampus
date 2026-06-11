@@ -40,8 +40,8 @@
                             {{ $article->category->name }}
                         </span>
                         @if($article->is_pinned)
-                            <div class="absolute top-4 right-4 w-8 h-8 bg-amber-400 text-white rounded-full shadow-md z-10 border border-white flex items-center justify-center transform rotate-12">
-                                <svg class="w-4 h-4 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 11V5.5C16 4.67 15.33 4 14.5 4h-5C8.67 4 8 4.67 8 5.5V11L6.5 14v1h4v6l1.5 1.5L13.5 21v-6h4v-1L16 11z"></path></svg>
+                            <div class="absolute top-4 right-4 w-9 h-9 bg-black/40 backdrop-blur-md text-white rounded-full z-10 border border-white/20 flex items-center justify-center shadow-[0_4px_10px_rgba(0,0,0,0.3)]">
+                                <svg class="w-4 h-4 transform rotate-45 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 11V5.5C16 4.67 15.33 4 14.5 4h-5C8.67 4 8 4.67 8 5.5V11L6.5 14v1h4v6l1.5 1.5L13.5 21v-6h4v-1L16 11z"></path></svg>
                             </div>
                         @endif
                     </div>

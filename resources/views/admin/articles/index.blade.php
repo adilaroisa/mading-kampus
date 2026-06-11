@@ -30,8 +30,8 @@
                                 <div class="flex items-center gap-2">
                                     {{ $article->title }}
                                     @if($article->is_pinned)
-                                        <span title="Artikel Disematkan" class="inline-flex items-center justify-center p-1 bg-amber-100 text-amber-600 rounded-full shadow-sm">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                                        <span title="Artikel Disematkan" class="inline-flex items-center justify-center p-1 bg-rose-100 text-rose-600 rounded-full shadow-sm">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 11V5.5C16 4.67 15.33 4 14.5 4h-5C8.67 4 8 4.67 8 5.5V11L6.5 14v1h4v6l1.5 1.5L13.5 21v-6h4v-1L16 11z"></path></svg>
                                         </span>
                                     @endif
                                 </div>
